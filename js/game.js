@@ -3,7 +3,7 @@
  * js/game.js - Główna logika gry, renderowanie Canvas 800x540, sterowanie i interakcja
  */
 
-import { soundManager } from './audio.js';
+import { SoundSystem } from './audio.js';
 
 // --- STAN GRY ---
 const TARGET_ECTS = 30;
@@ -217,8 +217,8 @@ class Game {
 
     // Dźwięk & Pauza
     this.soundToggleBtn?.addEventListener('click', () => {
-      soundManager.init();
-      const isMuted = soundManager.toggleMute();
+      SoundSystem.init();
+      const isMuted = SoundSystem.toggleMute();
       this.soundToggleBtn.innerHTML = isMuted
         ? '<span class="icon-speaker" aria-hidden="true">🔇</span>'
         : '<span class="icon-speaker" aria-hidden="true">🔊</span>';
@@ -228,7 +228,7 @@ class Game {
 
     // Klawiatura PC
     window.addEventListener('keydown', (e) => {
-      soundManager.init();
+      SoundSystem.init();
       if (e.code === 'KeyW' || e.code === 'ArrowUp') this.keys.up = true;
       if (e.code === 'KeyS' || e.code === 'ArrowDown') this.keys.down = true;
       if (e.code === 'KeyA' || e.code === 'ArrowLeft') this.keys.left = true;
@@ -260,7 +260,7 @@ class Game {
       if (!el) return;
       const start = (ev) => {
         ev.preventDefault();
-        soundManager.init();
+        SoundSystem.init();
         this.keys[key] = true;
         el.classList.add('active');
       };
@@ -284,7 +284,7 @@ class Game {
   }
 
   startGame() {
-    soundManager.ensureContext();
+    SoundSystem.init();
     this.modalStart.classList.remove('modal-active');
     this.modalStart.classList.add('modal-hidden');
     this.state = 'PLAYING';
@@ -293,7 +293,7 @@ class Game {
   }
 
   restartGame() {
-    soundManager.ensureContext();
+    SoundSystem.init();
     this.modalGameOver.classList.add('modal-hidden');
     this.modalGameOver.classList.remove('modal-active');
     this.modalVictory.classList.add('modal-hidden');
@@ -330,7 +330,7 @@ class Game {
     if (this.speechTimeout) clearTimeout(this.speechTimeout);
     this.speechTextEl.textContent = text;
     this.speechBubble.classList.remove('speech-bubble-hidden');
-    soundManager.playProfessorAlert();
+    SoundSystem.play('freeze');
 
     this.speechTimeout = setTimeout(() => {
       this.speechBubble.classList.add('speech-bubble-hidden');
@@ -477,7 +477,7 @@ class Game {
       if (Math.hypot(this.player.x - item.x, this.player.y - item.y) < this.player.size / 2 + item.size / 2) {
         this.ectsItems.splice(i, 1);
         this.ects += 1;
-        soundManager.playEctsPickup();
+        SoundSystem.play('ects');
 
         // Respawn nowego ECTS
         this.spawnEcts();
@@ -496,7 +496,7 @@ class Game {
         this.coffeeItems.splice(i, 1);
         this.player.stamina = this.player.maxStamina;
         this.player.coffeeTimer = 4.5; // 4.5s turbo regeneracji
-        soundManager.playCoffeePickup();
+        SoundSystem.play('coffee');
         setTimeout(() => this.spawnCoffee(), 6000);
       }
     }
@@ -527,7 +527,7 @@ class Game {
 
   handleGameOver() {
     this.state = 'GAMEOVER';
-    soundManager.playGameOver();
+    SoundSystem.play('hit');
     this.statsEctsLostEl.textContent = `${this.ects} / ${TARGET_ECTS}`;
     this.statsTimeSurvivedEl.textContent = this.formatTime(this.elapsedSeconds);
     this.modalGameOver.classList.remove('modal-hidden');
@@ -536,7 +536,7 @@ class Game {
 
   handleVictory() {
     this.state = 'VICTORY';
-    soundManager.playVictory();
+    SoundSystem.play('win');
     this.statsVictoryTimeEl.textContent = this.formatTime(this.elapsedSeconds);
     this.modalVictory.classList.remove('modal-hidden');
     this.modalVictory.classList.add('modal-active');
